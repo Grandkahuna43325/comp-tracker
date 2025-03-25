@@ -1,0 +1,5 @@
+CompileFlags:
+  Add: 
+    -isystem
+    -I/nix/store/jmmjgq4v8anmnz6hfzd447jb77vi6xii-glibc-2.38-77-dev/include
+    -I/nix/store/dfqlrp0zgq8k21qajn7z6d0yjn9ab9af-gcc-12.3.0/include 
