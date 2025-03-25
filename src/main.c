@@ -15,6 +15,9 @@
 
 #define BACKLOG 10 // how many pending connections queue will hold
 
+const char message_part_1[] = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: ";
+const char message_part_2[] = "\r\n\r\n{\"message\":";
+
 void sigchld_handler(int s) {
   // waitpid() might overwrite errno, so we save and restore it:
   int saved_errno = errno;
@@ -97,7 +100,32 @@ int main(void) {
 
   printf("server: waiting for connections...\n");
 
-  char message[] = "HTTP/1.1 200 OK\r\nContent-Length: 5\r\nContent-Type: text/plain\r\n\r\nhello";
+  const char *payload = "\"Hello\"";
+  char content_length[8];
+  int payload_len = strlen(payload) + 2;  // +2 for the closing "}" and the opening "{"
+  snprintf(content_length, sizeof(content_length), "%d", payload_len);
+  
+  // Calculate total message size and allocate buffer
+  size_t total_size = strlen(message_part_1) + 
+                      strlen(content_length) + 
+                      strlen(message_part_2) + 
+                      strlen(payload) + 
+                      2;  // +2 for the closing "}" and null terminator
+  
+  char *final_message = malloc(total_size);
+  if (final_message == NULL) {
+    perror("malloc failed");
+    exit(1);
+  }
+  
+  // Build the complete message
+  strcpy(final_message, message_part_1);
+  strcat(final_message, content_length);
+  strcat(final_message, message_part_2);
+  strcat(final_message, payload);
+  strcat(final_message, "}");
+  printf("%s", final_message);
+
   while (1) { // main accept() loop
     sin_size = sizeof their_addr;
     new_fd = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size);
@@ -112,7 +140,7 @@ int main(void) {
 
     if (!fork()) {   // this is the child process
       close(sockfd); // child doesn't need the listener
-      if (send(new_fd, message, sizeof(message) -1, 0) == -1)
+      if (send(new_fd, final_message, strlen(final_message), 0) == -1)
         perror("send");
       close(new_fd);
       exit(0);
@@ -120,5 +148,6 @@ int main(void) {
     close(new_fd); // parent doesn't need this
   }
 
+  free(final_message);  // Clean up allocated memory
   return 0;
 }
