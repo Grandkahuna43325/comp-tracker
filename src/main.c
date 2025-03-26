@@ -16,7 +16,7 @@
 #define BACKLOG 10 // how many pending connections queue will hold
 
 const char message_part_1[] = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: ";
-const char message_part_2[] = "\r\n\r\n{\"message\":";
+const char message_part_2[] = "\r\n\r\n{\"message\":\"";
 
 void sigchld_handler(int s) {
   // waitpid() might overwrite errno, so we save and restore it:
@@ -100,30 +100,30 @@ int main(void) {
 
   printf("server: waiting for connections...\n");
 
-  const char *payload = "\"Hello\"";
+  const char *payload = "something";
   char content_length[8];
-  int payload_len = strlen(payload) + 2;  // +2 for the closing "}" and the opening "{"
+  int payload_len = strlen(payload) + 14; // 14 is the full message
   snprintf(content_length, sizeof(content_length), "%d", payload_len);
-  
+
   // Calculate total message size and allocate buffer
-  size_t total_size = strlen(message_part_1) + 
-                      strlen(content_length) + 
-                      strlen(message_part_2) + 
-                      strlen(payload) + 
-                      2;  // +2 for the closing "}" and null terminator
-  
+  size_t total_size = strlen(message_part_1) +
+                      strlen(content_length) +
+                      strlen(message_part_2) +
+                      strlen(payload) +
+                      3;  // +2 for the closing "}" and null terminator
+
   char *final_message = malloc(total_size);
   if (final_message == NULL) {
     perror("malloc failed");
     exit(1);
   }
-  
+
   // Build the complete message
   strcpy(final_message, message_part_1);
   strcat(final_message, content_length);
   strcat(final_message, message_part_2);
   strcat(final_message, payload);
-  strcat(final_message, "}");
+  strcat(final_message, "\"}");
   printf("%s", final_message);
 
   while (1) { // main accept() loop
