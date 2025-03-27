@@ -165,20 +165,25 @@ void parse_request(char buf[512], int len, Request req) {
   path[loop_count] = '\0';
 
   // set request method
-  if (*method == *"GET") {
+  if (strcmp(method, "GET") == 0) {
     req.type = GET;
-  } else if (*method == *"POST") {
+  } else if (strcmp(method, "POST") == 0) {
     req.type = POST;
-  } else if (*method == *"OPTIONS") {
+  } else if (strcmp(method, "OPTIONS") == 0) {
     req.type = OPTIONS;
   }
 
   req.path = malloc(loop_count);
   strncpy(req.path, path, loop_count);
 
-  printf("\n\n\treq:\npath: %s\ntype: %u\n body: %s\n body_length: %i\n "
-         "header_count: %i\n headers: unprintable for now",
-         req.path, req.type, req.body, req.body_length, req.header_count);
+  if (req.header_count > 0 && req.type == POST ) {
+    req.body = malloc(strlen(req.headers[req.header_count - 1].value) + 1);
+    strcpy(req.body, req.headers[req.header_count - 1].value);
+  }
+  printf("\n\n\treq:\npath: %s\ntype: %u\n body: %s\n "
+         "header_count: %i\n headers",
+         req.path, req.type, req.body, req.header_count);
+
 }
 
 void handle_requests(int sockfd) {
@@ -199,7 +204,12 @@ void handle_requests(int sockfd) {
 
     if (!fork()) { // create fork and check if I'm the child process, if yes
                    // then execute
-      Request request;
+      Request request = {.type = UNKNOWN,
+                         .path = NULL,
+                         .body = NULL,
+                         .headers = NULL,
+                         .header_count = 0};
+
       char buf[512];
       int byte_count;
 
@@ -217,27 +227,24 @@ void handle_requests(int sockfd) {
       if (send(new_fd, final_message, strlen(final_message), 0) == -1)
         perror("send");
       close(new_fd);
-      exit(0);
+
+      // Clean up allocated memory
       free(final_message);
       if (request.path)
         free(request.path);
       if (request.body)
         free(request.body);
       free_header(&request);
+
+      exit(0);
     }
     close(new_fd);
   }
 }
 
 void add_header(Request *req, char *key, char *value) {
-  printf("log1\n");
-  Header *temp = realloc(req->headers, (req->header_count + 1) * sizeof(Header));
-  if (temp == NULL) {
-    perror("realloc failed");
-    exit(1);
-  }
-  req->headers = temp;
-  printf("log2\n");
+  req->headers =
+      realloc(req->headers, (req->header_count + 1) * sizeof(Header));
   req->headers[req->header_count].key = strdup(key);
   req->headers[req->header_count].value = strdup(value);
   req->header_count++;

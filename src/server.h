@@ -17,7 +17,7 @@
 
 #define BACKLOG 10
 
-typedef enum { GET, POST, OPTIONS } RequestType;
+typedef enum { GET, POST, OPTIONS, UNKNOWN } RequestType;
 
 typedef struct {
   char *key;
@@ -33,8 +33,6 @@ typedef struct {
   int header_count;
 
   char *body;
-  int body_length;
-
 } Request;
 
 typedef struct {
@@ -44,8 +42,6 @@ typedef struct {
   int header_count;
 
   char *body;
-  int body_length;
-
 } Response;
 
 int run_server(char *port);

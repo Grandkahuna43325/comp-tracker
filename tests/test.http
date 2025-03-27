@@ -1,26 +1,26 @@
+# OPTIONS /hello HTTP/1.1
+# Host: localhost:8080
+# User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:136.0) Gecko/20100101 Firefox/136.0
+# Accept: */*
+# Accept-Language: en-US,en;q=0.5
+# Accept-Encoding: gzip, deflate, br, zstd
+# Access-Control-Request-Method: POST
+# Access-Control-Request-Headers: content-type
+# Referer: http://localhost:38311/
+# Origin: http://localhost:38311
+# Connection: keep-alive
+# Sec-Fetch-Dest: empty
+# Sec-Fetch-Mode: cors
+# Sec-Fetch-Site: same-site
+# Priority: u=4
+# Pragma: no-cache
+# Cache-Control:
 
-# POST http://localhost:8080/hello
-# Content-Type: application/json
-#
-# { 
-#     "message": "nigga"
-# }
 
-OPTIONS /hello HTTP/1.1
-Host: localhost:8080
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:136.0) Gecko/20100101 Firefox/136.0
-Accept: */*
-Accept-Language: en-US,en;q=0.5
-Accept-Encoding: gzip, deflate, br, zstd
-Access-Control-Request-Method: POST
-Access-Control-Request-Headers: content-type
-Referer: http://localhost:38311/
-Origin: http://localhost:38311
-Connection: keep-alive
-Sec-Fetch-Dest: empty
-Sec-Fetch-Mode: cors
-Sec-Fetch-Site: same-site
-Priority: u=4
-Pragma: no-cache
-Cache-Control:
+POST http://localhost:8080/hello
+Content-Type: application/json
+
+{ 
+    "message": "nigga"
+}
 
