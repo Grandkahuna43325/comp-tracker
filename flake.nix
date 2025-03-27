@@ -34,6 +34,7 @@
             export CXX=gcc
             export C_INCLUDE_PATH=$C_INCLUDE_PATH:${pkgs.glibc.dev}/include
             export CPLUS_INCLUDE_PATH=${pkgs.glibc.dev}/include
+            export lldb=${pkgs.lldb_17}/share/vscode/extensions/llvm-org.lldb-vscode-0.1.0/bin/lldb-vscode
           '';
 
           nativeBuildInputs = with pkgs; [
@@ -49,6 +50,7 @@
             pkg-config
             man-pages
             man-pages-posix
+            live-server
           ];
         };
       }
