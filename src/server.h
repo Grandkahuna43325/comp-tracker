@@ -13,11 +13,12 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <time.h>
 #include <unistd.h>
 
 #define BACKLOG 10
 
-typedef enum { GET, POST, OPTIONS, UNKNOWN } RequestType;
+typedef enum { GET, POST, OPTIONS, UNKNOWN, OPTIONS_RESPONSE } RequestType;
 
 typedef struct {
   char *key;
@@ -36,7 +37,7 @@ typedef struct {
 } Request;
 
 typedef struct {
-  RequestType type;
+  char *type;
 
   Header *headers;
   int header_count;
