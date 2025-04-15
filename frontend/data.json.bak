@@ -1,0 +1,109 @@
+{
+    "1": {
+        "date_range": "2023-01-21 - 2023-01-21",
+        "details": {
+            "25 free": "1/- : 1/- : 00:12:87",
+            "100 free": "1/- : 1/- : 01:04:43",
+            "25 but": "1/- : 1/- : 00:14:38",
+            "50 free": "1/- : 1/- : 00:27:43"
+        },
+        "age_cathegory": "-",
+        "location": "Międzyrzec Podlaski",
+        "name": "Zawody lodowe MCP"
+    },
+    "2": {
+        "date_range": "2023-02-11 - 2023-02-11",
+        "details": {
+            "25 but": "1/- : 1/- : 00:14:85",
+            "25 free": "1/- : 1/- : 00:13:51",
+            "50 free": "1/- : 1/- : 00:29:62",
+            "100 free": "1/- : 1/- : 01:08:98"
+        },
+        "age_cathegory": "-",
+        "location": "Łuków",
+        "name": "Zawody lodowe Łuków"
+    },
+    "3": {
+        "date_range": "2023-02-25 - 2023-02-25",
+        "details": {
+            "25 free": "1/- : 1/- : 00:13:15",
+            "100 free": "-/- : 2/- : 01:05:34",
+            "50 free": "-/- : 2/- : 00:28:87",
+            "50 back": "1/- : 1/- : 00:32:91",
+            "50 but": "-/- : 2/- : 00:32:09"
+        },
+        "age_cathegory": "-",
+        "location": "Ełk",
+        "name": "Mistrzostwa PL w pływaniu lodowym"
+    },
+    "5": {
+        "date_range": "2024-01-27 - 2024-01-28",
+        "details": {
+            "50 free": "1/- : 1/- : 00:28:85",
+            "100 free": "-/- : 2/- : 01:04:98",
+            "25 free": "1/- : 1/- : 00:13:08",
+            "50 but": "-/- : 2/- : 00:30:36"
+        },
+        "age_cathegory": "-",
+        "location": "Gdynia",
+        "name": "Puchar Świata w pływaniu lodowym"
+    },
+    "6": {
+        "date_range": "2024-02-24 - 2024-02-24",
+        "details": {
+            "25 free": "1/- : 1/- : 00:13:19",
+            "50 but": "-/- : 2/- : 00:34:12",
+            "50 back": "1/- : 1/- : 00:32:16"
+        },
+        "age_cathegory": "-",
+        "location": "Ełk",
+        "name": "Puchar Polski"
+    },
+    "7": {
+        "date_range": "2024-11-10 - 2024-11-10",
+        "details": {
+            "50 back": "1/- : 1/- : 00:29:73",
+            "50 but": "-/- : 2/- : 00:27:80"
+        },
+        "age_cathegory": "-",
+        "location": "Kozienice",
+        "name": "Zawody z okazji Święta Niepodległości"
+    },
+    "8": {
+        "date_range": "2025-01-13 - 2025-01-19",
+        "details": {
+            "100 back": "4/- : 7/- : 01:10:87",
+            "50 back": "6/- : 10/- : 00:32:14",
+            "100 free": "12/- : 28/- : 01:03:84",
+            "50 but": "9/- : 20/- : 00:30:36",
+            "50 free": "11/- : 27/- : 00:28:00"
+        },
+        "age_cathegory": "18-24",
+        "location": "Molveno - Włochy",
+        "name": "Mistrzostwa Świata 2025 Molveno"
+    },
+    "9": {
+        "date_range": "2025-02-08 - 2025-02-09",
+        "details": {
+            "25 free": "1/- : 5/- : 00:13:00",
+            "50 free": "1/- : 6/- : 00:28:40",
+            "100 free": "2/- : 6/- : 01:05:53",
+            "50 but": "1/- : 4/- : 00:30:11"
+        },
+        "age_cathegory": "open VI",
+        "location": "Gdynia",
+        "name": "Puchar Świata"
+    },
+    "10": {
+        "date_range": "2025-03-30 - 2025-03-30",
+        "details": {
+            "50 breast": "6/11 : null : 00:34:70",
+            "50 back": "1/7 : null : 00:29:24",
+            "50 but": "3/11 : null : 00:27:43",
+            "50 free": "3/15 : null : 00:25:88"
+        },
+        "age_cathegory": "16-99",
+        "location": "Kozienice",
+        "name": "nazwa"
+    }
+}

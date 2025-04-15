@@ -1,0 +1,113 @@
+body {
+  background-color: #000;
+}
+
+nav {
+  display: flex;
+  width: 100%;
+  height: 3vh;
+  justify-content: space-around;
+  background-color: #121212;
+}
+
+nav > div {
+  padding-left: 1%;
+  padding-right: 1%;
+  text-align: center;
+  background-color: #303030;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.nav-block-active {
+  background-color: #305530;
+}
+
+nav > div > h1 {
+  margin: 0;
+  color: white;
+}
+
+main {
+  color: white;
+}
+
+#main-input {
+  width: 90%;
+  margin: 1% auto;
+  background-color: #151515;
+  border: 0px solid #000;
+  color: white;
+  display: block;
+}
+
+.hidden {
+  display: none;
+}
+
+.highlited {
+  background-color: rgba(125, 25, 100, 0.6);
+}
+
+#overlay {
+  position: absolute;
+  height: 50vh;
+  width: 80vw;
+  background-color: #000;
+  border: 3px solid #bd93f9;
+  border-radius: 13px;
+  padding: 5%;
+  margin: 3% 5%;
+  overflow: auto;
+  top: 10vh;
+}
+
+#overlay h2 {
+  color: #bd93f9;
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  margin-top: 0;
+}
+
+#overlay p {
+  color: #f8f8f2;
+  margin: 0.3rem 0;
+}
+
+.result-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.result-table th, .result-table td {
+  border: 1px solid #6272a4;
+  padding: 0.5rem;
+  color: #f8f8f2;
+  text-align: center;
+}
+
+.result-table th {
+  background-color: #44475a;
+  color: #ff79c6;
+}
+
+.result-table tr:nth-child(even) {
+  background-color: #282a36;
+}
+
+#overlay-selected {
+  background-color: rgba(125, 25, 100, 0.6);
+}
+
+#overlay-selected-td {
+  background-color: rgba(200, 25, 25, 0.6);
+}
+
+#overlay-input {
+  color: white;
+  border: none;
+  margin-left: 10px;
+  background-color: rgba(125, 25, 100, 0.6);
+}

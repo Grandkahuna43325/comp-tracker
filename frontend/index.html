@@ -1,13 +1,27 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pl">
   <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Comp tracker</title>
-    <link href="style.css" rel="stylesheet">
-    <script src="./index.js"></script>
+    <link href="style.css" rel="stylesheet" />
+    <script src="./index.js" type="module" defer></script>
   </head>
   <body>
-    <button type="btn" onclick="run()">clickme</button>
+    <!-- <button type="btn" onclick="run()">clickme</button> -->
+    <nav>
+      <div class="nav-block-active">
+        <h1>Lista</h1>
+      </div>
+      <!-- <div> -->
+      <!--   <h1>Szukaj</h1> -->
+      <!-- </div> -->
+      <div>
+        <h1>Edytuj</h1>
+      </div>
+    </nav>
+    <input autocomplete="off" type="text" name="search" placeholderc="Search" id="main-input">
+    <main>
+    </main>
   </body>
 </html>

@@ -1,20 +1,27 @@
 #include "server.h"
+#include <stdio.h>
 
 int run_server(char *port);
 
 int setup_socket(const char *port);
 
-char *parse_response(Response res);
-void parse_request(char buf[512], int len, Request req);
+char *parse_response(Response *res);
+void parse_request(char buf[512], int len, Request *req);
 void handle_requests(int sockfd);
-void add_header(void *p, char *key, char *value);
-void free_header(void *p);
-void create_response(Response res, Request req);
-void create_options_response(Response res);
+void create_response(Response *res, Request *req);
 
+void create_get_response(Response *res, Request *req);
+void create_post_response(Response *res, Request *req);
+void create_options_response(Response *res);
+
+void add_header(Header **headers, int *header_count, char *key, char *value);
+void free_header(Header *headers, int *header_count);
+
+void read_file_to(char **body, char **body_len, char *file_name);
 void sigchld_handler();
 void setup_sigaction();
 void *get_in_addr(struct sockaddr *sa);
+char *get_current_time(int offset);
 
 int run_server(char *port) {
   int sockfd = setup_socket(port);
@@ -79,50 +86,41 @@ int setup_socket(const char *port) {
   return sockfd;
 }
 
-char *parse_response(Response res) {
-  char *final_message = malloc(6);
-  strcpy(final_message, "hello\0");
-  // char h_p1[32];
-  // snprintf(h_p1, sizeof(h_p1), "HTTP/1.1 %d", status);
-  //
-  // const char h_p2[] = "\r\nContent-Type: application/json";
-  // const char h_p3[] = "\r\nContent-Length: ";
-  // const char h_p4[] = "\r\n\r\n{\"message\":\"";
-  // const char h_p5[] = "\"}\0";
-  //
-  // char content_length[8];
-  // snprintf(content_length, sizeof(content_length), "%d",
-  //          (int){strlen(payload) + 14});
-  //
-  // // Calculate total message size and allocate buffer
-  // size_t total_size = strlen(h_p1) + strlen(h_p2) + strlen(h_p3) +
-  //                     strlen(h_p4) + strlen(h_p5) + strlen(payload) +
-  //                     strlen(content_length) + 1;
-  //
-  // char *final_message = malloc(total_size);
-  // if (final_message == NULL) {
-  //   perror("malloc failed");
-  //   exit(1);
-  // }
-  //
-  // // Build the complete message
-  // strcpy(final_message, h_p1);
-  // strcat(final_message, h_p2);
-  // strcat(final_message, h_p3);
-  // strcat(final_message, content_length);
-  // strcat(final_message, h_p4);
-  // strcat(final_message, payload);
-  // strcat(final_message, h_p5);
+char *parse_response(Response *res) {
+  size_t message_size =
+      strlen(res->type) + ((res->body) ? strlen(res->body) + 3 : 2);
 
-  // "HTTP/1.1 200\r\nContent-Type: application/json\r\nContent-Length:
-  // xyz\r\n\r\n{\"message\":\"message\"}"
-  // printf("%s", final_message);
+  for (int i = 0; i < res->header_count; i++) {
+    message_size += strlen(res->headers[i].key) +
+                    strlen(res->headers[i].value) + 4; //+4 for the ": " "\n\t"
+  }
+
+  char *final_message = malloc(message_size);
+  final_message[0] = '\0';
+
+  strcpy(final_message, res->type);
+
+  for (int i = 0; i < res->header_count; i++) {
+    strcat(final_message, res->headers[i].key);
+    strcat(final_message, ": ");
+    strcat(final_message, res->headers[i].value);
+    strcat(final_message, "\r\n");
+  }
+
+  if (res->body) {
+    strcat(final_message, "\r\n");
+    strcat(final_message, res->body);
+  } else {
+    strcat(final_message, "\0");
+  }
+
+  printf("final_message:\n\n%s\n\n", final_message);
 
   return final_message;
 }
 
-void parse_request(char buf[512], int len, Request req) {
-  printf("\nreq:\n%s\n\n", buf);
+void parse_request(char buf[512], int len, Request *req) {
+  // printf("\nreq:\n%s\n\n", buf);
 
   int loop_count = 0, char_index = 0;
 
@@ -140,7 +138,7 @@ void parse_request(char buf[512], int len, Request req) {
     if (key && value) {
       while (*value == ' ')
         value++; // Trim leading spaces
-      add_header(&req, key, value);
+      add_header(&req->headers, &req->header_count, key, value);
     }
 
     line = strtok(NULL, "\r\n");
@@ -158,32 +156,31 @@ void parse_request(char buf[512], int len, Request req) {
   char_index++;
   loop_count = 0;
   for (; request_line[char_index] != ' ' && request_line[char_index] != '\0';
-  char_index++) {
+       char_index++) {
     path[loop_count] = request_line[char_index];
     loop_count++;
   }
 
   path[loop_count] = '\0';
-  req.path = malloc(loop_count);
-  strncpy(req.path, path, loop_count);
+  req->path = malloc(loop_count);
+  strncpy(req->path, path, loop_count);
 
   // set request method
   if (strcmp(method, "GET") == 0) {
-    req.type = GET;
+    req->type = GET;
   } else if (strcmp(method, "POST") == 0) {
-    req.type = POST;
+    req->type = POST;
   } else if (strcmp(method, "OPTIONS") == 0) {
-    req.type = OPTIONS;
+    req->type = OPTIONS;
   }
 
-
-  if (req.header_count > 0 && req.type == POST ) {
-    req.body = malloc(strlen(req.headers[req.header_count - 1].value) + 1);
-    strcpy(req.body, req.headers[req.header_count - 1].value);
+  if (req->header_count > 0 && req->type == POST) {
+    req->body = malloc(strlen(req->headers[req->header_count - 1].value) + 1);
+    strcpy(req->body, req->headers[req->header_count - 1].value);
   }
-  printf("\n\n\treq:\npath: %s\ntype: %u\n body: %s\n "
-         "header_count: %i\n headers\n",
-         req.path, req.type, req.body, req.header_count);
+  // printf("\n\n\treq->\npath: %s\ntype: %u\n body: %s\n "
+  //        "header_count: %i\n headers\n",
+  //        req->path, req->type, req->body, req->header_count);
 }
 
 void handle_requests(int sockfd) {
@@ -202,8 +199,8 @@ void handle_requests(int sockfd) {
     inet_ntop(their_addr.ss_family, get_in_addr((struct sockaddr *)&their_addr),
               s, sizeof s);
 
-    if (!fork()) { // create fork and check if I'm the child process, if yes
-                   // then execute
+    if (!fork()) {   // create fork and check if I'm the child process, if yes
+                     // then execute
       close(sockfd); // close listener, fork doesn't need it
       Request request = {.type = UNKNOWN,
                          .path = NULL,
@@ -211,21 +208,23 @@ void handle_requests(int sockfd) {
                          .headers = NULL,
                          .header_count = 0};
 
-      Response response = {.type = NULL,
-                         .body = NULL,
-                         .headers = NULL,
-                         .header_count = 0};
+      Response response = {
+          .type = NULL, .body = NULL, .headers = NULL, .header_count = 0};
 
       char buf[512];
       int byte_count;
 
       byte_count = recv(new_fd, buf, sizeof(buf), 0);
 
-      parse_request(buf, byte_count, request);
+      parse_request(buf, byte_count, &request);
 
-      create_response(response, request);
+      // printf("\n\n\treq:\npath: %s\ntype: %u\n body: %s\n "
+      //        "header_count: %i\n",
+      //        request.path, request.type, request.body, request.header_count);
 
-      char *final_message = parse_response(response);
+      create_response(&response, &request);
+
+      char *final_message = parse_response(&response);
 
       if (send(new_fd, final_message, strlen(final_message), 0) == -1)
         perror("send");
@@ -237,13 +236,13 @@ void handle_requests(int sockfd) {
         free(request.path);
       if (request.body)
         free(request.body);
-      free_header(&request);
+      free_header(request.headers, &request.header_count);
 
       if (response.type)
         free(response.type);
       if (response.body)
         free(response.body);
-      free_header(&response);
+      free_header(response.headers, &response.header_count);
 
       exit(0);
     }
@@ -251,59 +250,117 @@ void handle_requests(int sockfd) {
   }
 }
 
-void create_response(Response res, Request req) {
-  switch (req.type) {
-    case GET:
-      res.type = "POST";
-      break;
-    case POST:
-      res.type = "POST";
-    case OPTIONS:
-      create_options_response(res);
-      return;
-      break;
-    default:
-     perror("Unsupported request type");
-     exit(1);
+void create_response(Response *res, Request *req) {
+  switch (req->type) {
+  case GET:
+    create_get_response(res, req);
+    break;
+  case POST:
+    create_post_response(res, req);
+  case OPTIONS:
+    create_options_response(res);
+    return;
+    break;
+  default:
+    perror("Unsupported request type\n");
+    exit(1);
     break;
   }
 }
 
-void create_options_response(Response res) {
-  char type[] = "HTTP/1.1 204 No Content\t\n";
-  res.type = malloc(sizeof type);
-  strcpy(res.type, type);
+void create_get_response(Response *res, Request *req) {
+  if (strcmp(req->path, "/data") == 0) {
+    char type[] = "HTTP/1.1 200 OK\r\n";
+    char *slen = malloc(64);
 
-  add_header(&res, "Allow", "OPTIONS, GET, HEAD, POST");
-  add_header(&res, "Cache-Control", "max-age=604800");
-  add_header(&res, "Date", get_current_time());
-  add_header(&res, "Server", "EOS (lax004/2813)");
+    res->type = malloc(sizeof type);
+    if (res->type == NULL) {
+        perror("Error opening file");
+        return;
+    }
+
+    strcpy(res->type, type);
+
+    read_file_to(&res->body, &slen, (char*){"./frontend/data.json"});
+
+
+    add_header(&res->headers, &res->header_count, "Access-Control-Allow-Origin", "*");
+    add_header(&res->headers, &res->header_count, "Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    add_header(&res->headers, &res->header_count, "Access-Control-Allow-Headers", "Content-Type");
+    add_header(&res->headers, &res->header_count, "Age", "249970");
+    add_header(&res->headers, &res->header_count, "Cache-Control", "max-age=604800");
+    add_header(&res->headers, &res->header_count, "Content-Type", "text/html; charset=UTF-8");
+    add_header(&res->headers, &res->header_count, "Date", get_current_time(0));
+    add_header(&res->headers, &res->header_count, "Expires", get_current_time(10000));
+    add_header(&res->headers, &res->header_count, "Last-Modified", get_current_time(-10000));
+    add_header(&res->headers, &res->header_count, "Server", "ECAcc (nyd/D13E)");
+    add_header(&res->headers, &res->header_count, "Vary", "Accept-Encoding");
+    add_header(&res->headers, &res->header_count, "X-Cache", "404-HIT");
+    add_header(&res->headers, &res->header_count, "Content-Length", slen);
+
+
+  } else {
+    char type[] = "HTTP/1.1 404 Not Found\r\n";
+    res->type = malloc(sizeof type);
+    strcpy(res->type, type);
+
+    add_header(&res->headers, &res->header_count, "Access-Control-Allow-Origin", "*");
+    add_header(&res->headers, &res->header_count, "Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    add_header(&res->headers, &res->header_count, "Access-Control-Allow-Headers", "Content-Type");
+    add_header(&res->headers, &res->header_count, "Age", "249970");
+    add_header(&res->headers, &res->header_count, "Cache-Control", "max-age=604800");
+    add_header(&res->headers, &res->header_count, "Content-Type", "text/html; charset=UTF-8");
+    add_header(&res->headers, &res->header_count, "Date", get_current_time(0));
+    add_header(&res->headers, &res->header_count, "Expires", get_current_time(10000));
+    add_header(&res->headers, &res->header_count, "Last-Modified", get_current_time(-10000));
+    add_header(&res->headers, &res->header_count, "Server", "ECAcc (nyd/D13E)");
+    add_header(&res->headers, &res->header_count, "Vary", "Accept-Encoding");
+    add_header(&res->headers, &res->header_count, "X-Cache", "404-HIT");
+    add_header(&res->headers, &res->header_count, "Content-Length", "0");
+  }
+}
+
+void create_post_response(Response *res, Request *req) {}
+
+void create_options_response(Response *res) {
+  res->type = malloc(26);
+  strcpy(res->type, "HTTP/1.1 204 No Content\r\n");
+
+  add_header(&res->headers, &res->header_count, "Allow", "GET, POST, OPTIONS");
+  add_header(&res->headers, &res->header_count, "Access-Control-Allow-Origin", "*");
+  add_header(&res->headers, &res->header_count, "Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  add_header(&res->headers, &res->header_count, "Access-Control-Allow-Headers", "Content-Type");
+  add_header(&res->headers, &res->header_count, "Cache-Control", "max-age=604800");
+  add_header(&res->headers, &res->header_count, "Date", get_current_time(0));
+  add_header(&res->headers, &res->header_count, "Server", "EOS (lax004/2813)");
 
   // res.headers = "Allow: OPTIONS, GET, HEAD, POST\n\t"
   //   "Cache-Control: max-age=604800\n\t"
   //   "Date: Thu, 13 Oct 2016 11:45:00 GMT\n\t"
   //   "Server: EOS (lax004/2813)\n\t";
-
 }
 
-void add_header(void *p, char *key, char *value) {
-  Request req = *((Request *)p);
-  req.headers =
-      realloc(req.headers, (req.header_count + 1) * sizeof(Header));
-  req.headers[req.header_count].key = strdup(key);
-  req.headers[req.header_count].value = strdup(value);
-  req.header_count++;
+void add_header(Header **headers, int *header_count, char *key, char *value) {
+  Header *temp = realloc(*headers, (*header_count + 1) * sizeof(Header));
+  if (temp == NULL) {
+    perror("Failed to reallocate headers");
+    return;
+  }
+  *headers = temp;
+  (*headers)[*header_count].key = strdup(key);
+  (*headers)[*header_count].value = strdup(value);
+  *header_count += 1;
 }
 
-void free_header(void *p) {
-  Request req = *((Request *)p);
-  if (req.header_count > 0) {
-    for (int i = 0; i < req.header_count; i++) {
-      free(req.headers[i].key);
-      free(req.headers[i].value);
+void free_header(Header *headers, int *header_count) {
+  if (*header_count > 0) {
+    for (int i = 0; i < *header_count; i++) {
+      free(headers[i].key);
+      free(headers[i].value);
     }
-    free(req.headers);
-    req.header_count = 0;
+    free(headers);
+    headers = NULL;
+    *header_count = 0;
   }
 }
 
@@ -338,14 +395,64 @@ void setup_sigaction() {
   }
 }
 
-char* get_current_time() {
-  char *buffer = malloc(sizeof(char) * 40);
+char *get_current_time(int offset) {
+  static char buffer[50];
   time_t rawtime;
   struct tm *gmt;
 
   time(&rawtime);
+  rawtime += offset;
   gmt = gmtime(&rawtime);
 
-  strftime(buffer, sizeof buffer, "%a, %d %b %Y %H:%M:%S GMT", gmt);
+  strftime(buffer, 50, "%a, %d %b %Y %H:%M:%S GMT", gmt);
   return buffer;
+}
+
+void read_file_to(char **body, char **body_len, char *file_name) {
+    FILE *file;
+    char slen[64];
+
+    file = fopen(file_name, "r");
+    if (file == NULL) {
+        perror("Error opening file");
+        return;
+    }
+
+    // Get file size
+    fseek(file, 0, SEEK_END);
+    long file_size = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    // Allocate buffer for entire file
+    char *buf = malloc(file_size + 1);
+    if (buf == NULL) {
+        perror("Memory allocation failed");
+        fclose(file);
+        return;
+    }
+
+    // Read entire file
+    size_t bytes_read = fread(buf, 1, file_size, file);
+    if (bytes_read < file_size) {
+        perror("Error reading file");
+        free(buf);
+        fclose(file);
+        return;
+    }
+    buf[file_size] = '\0';
+
+    fclose(file);
+    
+    *body = malloc(file_size + 1);
+    if (*body == NULL) {
+        perror("Memory allocation failed");
+        free(buf);
+        return;
+    }
+
+    snprintf(slen, sizeof(slen), "%li", file_size);
+
+    strcpy(*body, buf);
+    strcpy(*body_len, slen);
+    free(buf);
 }
